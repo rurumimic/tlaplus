@@ -38,7 +38,9 @@ Next == \/ FillSmall
         \/ EmptySmall 
         \/ EmptyBig    
         \/ SmallToBig    
-        \/ BigToSmall   
+        \/ BigToSmall  
+
+NotSolved == big # 4 
 
 =============================================================================
 \* Modification History
