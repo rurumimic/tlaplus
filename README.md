@@ -33,7 +33,7 @@ which pdflatex
 1. File → Preferences
    - Specifiy pdflatex command: `/Library/TeX/texbin/pdflatex`
 1. File → Open Spec → Add New Spec...
-   - Root-module file: [SimpleProgram.tla](src/SimpleProgram.tla)
+   - Root-module file: [SimpleProgram.tla](src/SimpleProgram/SimpleProgram.tla)
    - Specification name: `SimpleProgram`
 1. File → Produce PDF Version: `Option` + `Command` + `P`
 
