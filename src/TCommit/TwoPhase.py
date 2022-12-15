@@ -26,17 +26,6 @@ Messages = frozenset.union(init_rm_state, next_rm_state)
 #   frozendict.frozendict({'type': 'Abort'})
 # })
 
-# # TPInit
-# rmState = frozenset({ frozendict({ x: "working" }) for x in RM })
-# # frozenset({
-# #   frozendict.frozendict({'r3': 'working'}), 
-# #   frozendict.frozendict({'r1': 'working'}), 
-# #   frozendict.frozendict({'r2': 'working'})
-# # })
-# tmState = "init"
-# tmPrepared = frozenset({})
-# msgs = frozenset({})
-
 def records(*s): # k, v, ...
     return frozendict(zip(*[iter(s)]*2)) # frozendict({k: v, ...})
 
@@ -85,22 +74,17 @@ def notCommitted():
     return True
 
 def Prepare(r):
-    print('Prepare', r)
     global rmState, _rmState
     rm_state = next(x for x in rmState if r in x).value() # working / prepared / committed / aborted
     if rm_state == "working":
-        print('Prepare', r, 'working')
         _rmState = EXCEPT(rmState, r, "prepared")
 
 def Decide(r):
-    print('Decide', r)
     global rmState, _rmState
     rm_state = next(x for x in rmState if r in x).value() # working / prepared / committed / aborted
     if rm_state == "prepared" and canCommit():
-        print('Decide', r, 'canCommit')
         _rmState = EXCEPT(rmState, r, "committed")
     elif (rm_state == "working" or rm_state == "prepared") and notCommitted():
-        print('Decide', r, 'notCommitted')
         _rmState = EXCEPT(rmState, r, "aborted")
 
 
@@ -119,74 +103,58 @@ def TPInit():
     UNCHANGED('rmState', 'tmState', 'tmPrepared', 'msgs')
 
 def TMRcvPrepared(r):
-    print('TMRcvPrepared', r)
     global rmState, tmState, tmPrepared, msgs
     global _rmState, _tmState, _tmPrepared, _msgs
     if tmState == "init":
-        print('TMRcvPrepared', r, 'init')
         if sets(records("type", "Prepared", "rm", r)).issubset(msgs):
-            print('TMRcvPrepared', r, 'RcvPrepared')
             _tmPrepared = tmPrepared | frozenset({r})
             UNCHANGED('rmState', 'tmState', None, 'msgs')
 
 def TMCommit():
-    print('TMCommit')
     global rmState, tmState, tmPrepared, msgs
     global _rmState, _tmState, _tmPrepared, _msgs
     if tmState == "init":
-        print('TMCommit', 'init', tmPrepared, frozenset(RM))
         if tmPrepared == frozenset(RM):
-            print('TMCommit', True)
             _tmState = "done"
             _msgs = msgs | sets(records("type", "Commit"))
             UNCHANGED('rmState', None, 'tmPrepared', None)
 
 def TMAbort():
-    print('TMAbort')
     global rmState, tmState, tmPrepared, msgs
     global _rmState, _tmState, _tmPrepared, _msgs
     if tmState == "init":
-        print('TMAbort', 'init')
         _tmState = "done"
         _msgs = msgs | sets(records("type", "Abort"))
         UNCHANGED('rmState', None, 'tmPrepared', None)
 
 def RMPrepare(r): # r1 / r2 / r3
-    print('RMPrepare', r)
     global rmState, tmState, tmPrepared, msgs
     global _rmState, _tmState, _tmPrepared, _msgs
     rm_state = next(x for x in rmState if r in x).value() # working / prepared / committed / aborted
     if rm_state == "working":
-        print('RMPrepare', r, 'working')
         _rmState = EXCEPT(rmState, r, "prepared")
         _msgs = msgs | sets(records("type", "Prepared", "rm", r))
         UNCHANGED(None, 'tmState', 'tmPrepared', None)
 
 def RMChooseToAbort(r): # r1 / r2 / r3
-    print('RMChooseToAbort', r)
     global rmState, tmState, tmPrepared, msgs
     global _rmState, _tmState, _tmPrepared, _msgs
     rm_state = next(x for x in rmState if r in x).value() # working / prepared / committed / aborted
     if rm_state == "working":
-        print('RMChooseToAbort', r, 'working')
         _rmState = EXCEPT(rmState, r, "aborted")
         UNCHANGED(None, 'tmState', 'tmPrepared', 'msgs')
 
 def RMRcvCommitMsg(r): # r1 / r2 / r3
-    print('RMRcvCommitMsg', r)
     global rmState, tmState, tmPrepared, msgs
     global _rmState, _tmState, _tmPrepared, _msgs
     if sets(records("type", "Commit")).issubset(msgs):
-        print('RMRcvCommitMsg', r, 'Commit')
         _rmState = EXCEPT(rmState, r, "committed")
         UNCHANGED(None, 'tmState', 'tmPrepared', 'msgs')
 
 def RMRcvAbortMsg(r): # r1 / r2 / r3
-    print('RMRcvAbortMsg', r)
     global rmState, tmState, tmPrepared, msgs
     global _rmState, _tmState, _tmPrepared, _msgs
     if sets(records("type", "Abort")).issubset(msgs):
-        print('RMRcvAbortMsg', r, 'Abort')
         _rmState = EXCEPT(rmState, r, "aborted")
         UNCHANGED(None, 'tmState', 'tmPrepared', 'msgs')
 
@@ -254,10 +222,6 @@ Next()
 ##############
 
 rmState
-_rmState
 tmState
-_tmState
 tmPrepared
-_tmPrepared
 msgs
-_msgs
