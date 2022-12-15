@@ -79,38 +79,25 @@ TMRcvPrepared(r) ==
   /\ tmPrepared' = tmPrepared \cup {r}
   /\ UNCHANGED <<rmState, tmState, msgs>>
 
-\* TMCommit ==
-\*   (*************************************************************************)
-\*   (* The TM commits the transaction; enabled iff the TM is in its initial  *)
-\*   (* state and every RM has sent a "Prepared" message.                     *)
-\*   (*************************************************************************)
-\*   /\ tmState = "init"
-\*   /\ tmPrepared = RM
-\*   /\ tmState' = "done"
-\*   /\ msgs' = msgs \cup {[type |-> "Commit"]}
-\*   /\ UNCHANGED <<rmState, tmPrepared>>
-
 TMCommit ==
-    /\ tmState = "init"
-    /\ tmPrepared = RM
-    /\ tmState' = "done"
-    /\ msgs' = [type : {"Commit"}]
-    /\ UNCHANGED <<rmState, tmPrepared>>
+  (*************************************************************************)
+  (* The TM commits the transaction; enabled iff the TM is in its initial  *)
+  (* state and every RM has sent a "Prepared" message.                     *)
+  (*************************************************************************)
+  /\ tmState = "init"
+  /\ tmPrepared = RM
+  /\ tmState' = "done"
+  /\ msgs' = msgs \cup {[type |-> "Commit"]}
+  /\ UNCHANGED <<rmState, tmPrepared>>
 
-\*TMAbort ==
-\*  (*************************************************************************)
-\*  (* The TM spontaneously aborts the transaction.                          *)
-\*  (*************************************************************************)
-\*  /\ tmState = "init"
-\*  /\ tmState' = "done"
-\*  /\ msgs' = msgs \cup {[type |-> "Abort"]}
-\*  /\ UNCHANGED <<rmState, tmPrepared>>
-
- TMAbort ==
-     /\ tmState = "init"
-     /\ tmState' = "done"
-     /\ msgs' = [type : {"Abort"}]
-     /\ UNCHANGED <<rmState, tmPrepared>>
+TMAbort ==
+ (*************************************************************************)
+ (* The TM spontaneously aborts the transaction.                          *)
+ (*************************************************************************)
+ /\ tmState = "init"
+ /\ tmState' = "done"
+ /\ msgs' = msgs \cup {[type |-> "Abort"]}
+ /\ UNCHANGED <<rmState, tmPrepared>>
 
 RMPrepare(r) == 
   (*************************************************************************)
@@ -120,11 +107,6 @@ RMPrepare(r) ==
   /\ rmState' = [rmState EXCEPT ![r] = "prepared"]
   /\ msgs' = msgs \cup {[type |-> "Prepared", rm |-> r]}
   /\ UNCHANGED <<tmState, tmPrepared>>
-
-\* RMPrepare(r) == 
-\*     /\ rmState[r] = "working"
-\*     /\ rmState' = "prepared"
-\*     /\ msgs' = [type : {"Prepared"}, rm : RM]
   
 RMChooseToAbort(r) ==
   (*************************************************************************)
@@ -135,11 +117,6 @@ RMChooseToAbort(r) ==
   /\ rmState' = [rmState EXCEPT ![r] = "aborted"]
   /\ UNCHANGED <<tmState, tmPrepared, msgs>>
 
-\* RMChooseToAbort(r) ==
-\*     /\ rmState[r] = "working"
-\*     /\ rmState' = "aborted"
-\*     /\ msgs' = [type : {"Abort"}, rm : RM]
-
 RMRcvCommitMsg(r) ==
   (*************************************************************************)
   (* Resource manager r is told by the TM to commit.                       *)
@@ -148,10 +125,6 @@ RMRcvCommitMsg(r) ==
   /\ rmState' = [rmState EXCEPT ![r] = "committed"]
   /\ UNCHANGED <<tmState, tmPrepared, msgs>>
 
-\* RMRcvCommitMsg(r) ==
-\*     /\ rmState' = "commited"
-\*     /\ [type : {"Commit"}] \in msgs
-
 RMRcvAbortMsg(r) ==
   (*************************************************************************)
   (* Resource manager r is told by the TM to abort.                        *)
@@ -159,10 +132,6 @@ RMRcvAbortMsg(r) ==
   /\ [type |-> "Abort"] \in msgs
   /\ rmState' = [rmState EXCEPT ![r] = "aborted"]
   /\ UNCHANGED <<tmState, tmPrepared, msgs>>
-
-\* RMRcvAbortMsg(r) ==
-\*     /\ rmState' = "aborted"
-\*     /\ [type : {"Abort"}] \in msgs
 
 TPNext ==
   \/ TMCommit \/ TMAbort
